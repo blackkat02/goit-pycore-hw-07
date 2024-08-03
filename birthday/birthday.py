@@ -1,113 +1,58 @@
 from field import Field, Name, Phone
-from datetime import datetime
-from collections import UserDict
+from datetime import date, datetime, timedelta
+from typing import Any, Union, Dict, List
 
 
 class Birthday(Field):
     """Represents a birthday field and ensures valid date format."""
-    def __init__(self, date_of_birth=None):
-        self.date_of_birth = date_of_birth
 
-    def get_formatted_date(self, format_code="%Y-%m-%d"):
-        """Formats the birthday as a string using the provided format code.
-        Args:
-            format_code (str, optional): The format code to use. Defaults to "%Y-%m-%d" (YYYY-MM-DD).
-        Returns:
-            str: The formatted date string.
-        """
-        if self.date_of_birth is not None:
-            try:
-                date_obj = datetime.strptime(self.date_of_birth, '%d.%m.%Y')
-                return date_obj.strftime(format_code)
-            except ValueError:
-                print("Invalid date format stored in Birthday object.")
-                return None
+    def __init__(self, date_of_birth: str):
+        formatted_date = self.get_formatted_date(date_of_birth)
+        if formatted_date:
+            super().__init__(formatted_date)
         else:
+            raise ValueError("Invalid date format stored in Birthday object.")
+
+    @staticmethod
+    def get_formatted_date(date_of_birth: str) -> Union[date, None]:
+        """Formats the birthday as a date object using the provided format code.
+        Args:
+            date_of_birth (str): The date of birth in DD.MM.YYYY format.
+        Returns:
+            Union[date, None]: The formatted date object or None if the format is invalid.
+        """
+        try:
+            return datetime.strptime(date_of_birth, '%d.%m.%Y').date()
+        except ValueError:
             return None
 
-
-class Record:
-    """Represents a record (contact) in the address book."""
-    def __init__(self, name):
-        self.name = Name(name)
-        self.phones = []
-        self.birthday = None
-
-    def add_date_of_birth(self, date_of_birth):
-        """Adds a birth date, ensuring validity through a Birthday object creation.
+    @staticmethod
+    def get_upcoming_birthdays(birthday_dict: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Finds upcoming birthdays within the next 7 days, accounting for weekends.
         Args:
-            date_of_birth (str): The birth date string in DD.MM.YYYY format.
-
+            birthday_dict (Dict[str, Any]): A dictionary with 'name' and 'birthday' keys.
         Returns:
-            Birthday: The created Birthday object.
+            List[Dict[str, str]]: A list of dictionaries with upcoming birthdays.
         """
-        date_of_birth = Birthday(date_of_birth)
-        self.birthday = date_of_birth
-        return self.birthday
+        upcoming_list_birthdays = []
+        today_date = datetime.today().date()
+        birthday = birthday_dict["birthday"]
 
-    def add_phone(self, phone_number):
-        """Adds a phone number, presumably validating or formatting it using a Phone class.
-        Args:
-            phone_number (str): The phone number string.
-        """
-        phone = Phone(phone_number)
-        self.phones.append(phone)
+        if isinstance(birthday, Birthday):
+            birthday_date = birthday.value.replace(year=today_date.year)
 
-    def __str__(self):
-        """Defines the string representation of the record, used when printing.
-        Returns:
-            str: A formatted string with name, phones, and birthday (if set).
-        """
-        return (f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}, "
-                f"birthday: {self.birthday.date_of_birth}")
+            if birthday_date < today_date:
+                birthday_date = birthday_date.replace(year=today_date.year + 1)
 
+            if birthday_date - today_date <= timedelta(days=7):
+                birthday_weekday = int(birthday_date.strftime("%w"))
+                number_weekday = [6, 0]
+                if birthday_weekday in number_weekday:
+                    days = 2 - number_weekday.index(birthday_weekday)
+                    birthday_date += timedelta(days=days)
 
-class AddressBook(UserDict):
-    """Provides a dictionary-like interface for managing records in an address book."""
-    def add_record(self, record):
-        """Adds a Record object to the address book.
-        Args:
-            record (Record): The Record object to add.
-        """
-        self.data[record.name.value] = record
+                upcoming_list_birthdays.append(
+                    {"name": birthday_dict["name"], "congratulation_date": birthday_date.strftime("%d.%m.%Y")}
+                )
 
-    def find(self, name):
-        """Finds a record by name.
-        Args:
-            name (str): The name to search for.
-        Returns:
-            Record: The record object found, or None if not found.
-        """
-        return self.data.get(name, None)
-
-    def delete(self, name):
-        """Deletes a record from the address book.
-
-        Args:
-            name (str): The name of the record to delete.
-        """
-
-
-# Тестування системи управління адресною книгою
-if __name__ == "__main__":
-    # Створення нової адресної книги
-    book = AddressBook()
-
-    # Створення запису для John
-    john_record = Record("John")
-    john_record.add_date_of_birth("22.02.2000")
-    john_record.add_phone("5555755555")
-    john_record.add_phone("9955555500")
-
-    # Додавання запису John до адресної книги
-    book.add_record(john_record)
-
-    # Створення та додавання нового запису для Jane
-    jane_record = Record("Jane")
-    jane_record.add_phone("9876543210")
-    jane_record.add_date_of_birth("21.11.1999")
-    book.add_record(jane_record)
-
-    # Виведення всіх записів у книзі
-    for name, record in book.data.items():
-        print(record)
+        return upcoming_list_birthdays
