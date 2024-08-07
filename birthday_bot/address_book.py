@@ -42,12 +42,12 @@ class AddressBook(UserDict):
             print(name)
 
     @property
-    def get_upcoming_birthdays(self) -> list[dict]:
+    def get_upcoming_birthdays(self) -> str:
         """Calculates and returns a list of upcoming birthdays within the next 7 days.
         This method considers weekends (Saturdays and Sundays) to avoid scheduling
         congratulations on those days.
         Returns:
-            list[dict]: A list of dictionaries containing name and congratulation date
+            str: A list of dictionaries containing name and congratulation date
                         for upcoming birthdays.
         """
         upcoming_list_birthdays = []
@@ -74,5 +74,7 @@ class AddressBook(UserDict):
                     {"name": record.name.value[0],
                      "congratulation_date": birthday_this_year.strftime("%d.%m.%Y")}
                 )
-
-        return upcoming_list_birthdays
+        if not upcoming_list_birthdays:
+            return "The birthday contact list for the next 7 days is empty"
+        return (f"The birthday contact list for the next 7 days is: \n"
+                f"{'\n'.join([f"{i + 1}. {t}" for i, t in enumerate(upcoming_list_birthdays)])}")

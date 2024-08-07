@@ -24,7 +24,6 @@ def main():
             print("How can I help you?")
 
         elif command == "add":
-            print(args)
             print(add_contacts(args, book))
 
         elif command == "change":
@@ -48,7 +47,6 @@ def main():
         else:
             print("Invalid command.")
 
+
 if __name__ == "__main__":
     main()
-
-#  add q 1234567890    add a 2345678900    add-birthday q 10.08.2000    add-birthday a 8.08.2001     birthdays

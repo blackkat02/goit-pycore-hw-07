@@ -1,7 +1,6 @@
 from decorators import InputError
 from address_book import AddressBook
 from record import Record
-#from datetime import date, datetime, timedelta
 from birthday import Birthday
 
 
@@ -17,11 +16,11 @@ def add_contacts(args, book: AddressBook):
     """
     name, phone, *_ = args
     record = book.find(name)
-    message = "Contact updated."
+    message = f"Contact {name}: {phone} updated."
     if record is None:
         record = Record(name)
         book.add_record_phone(record)
-        message = "Contact added."
+        message = f"Contact {name}: {phone} added."
     if phone:
         record.add_phone(phone)
     return message
@@ -43,9 +42,10 @@ def change_phone(args, book: AddressBook):
     record = book.find(name)
     if record:
         record.edit_phone(old_phone, new_phone)
-        return "Phone number updated."
+        return f"{name}'s phone number updated."
     else:
         return "Contact not found."
+
 
 @InputError.input_error
 def show_phone(args, book: AddressBook):
@@ -76,11 +76,12 @@ def show_all_contacts(args, book: AddressBook):
         str: A string listing all contacts and their information, one per line.
     """
     contacts = []
+    if not book.data:
+        return "Your contact's book is empty."
     for name, record in book.data.items():
         name = ', '.join(book)
-        contacts.append(f"{name}: {record}")
-    return "\n".join(contacts)
-
+        contacts.append(f"{record}")
+    return '\n'.join([f"{i + 1}. {t}" for i, t in enumerate(contacts)])
 
 
 @InputError.input_error
@@ -125,10 +126,25 @@ def show_birthday(args, book: AddressBook):
 
 
 @InputError.input_error
-def parse_input(user_input):
-    return user_input.split()
+def birthdays(args, book) -> str:
+    """Show upcoming birthdays.
+    Args:
+        book (AddressBook): The address book instance.
+    Returns:
+        str: List of upcoming birthdays or a message indicating none.
+    """
+    return book.get_upcoming_birthdays
 
 
 @InputError.input_error
-def birthdays(args, book):
-    return book.get_upcoming_birthdays
+def parse_input(user_input):
+    """
+        Parse user input into a command and its arguments.
+        Args:
+            user_input (str): The raw input from the user.
+        Returns:
+            List[str]: The command and list of arguments.
+        """
+    return user_input.split()
+
+

@@ -32,10 +32,8 @@ class AddressBook(UserDict):
             name (str): The name of the record to delete.
         """
         if name in self.data:
-            print(name, self.data[name])
-            del self.data[name]
-            print("++++++++++++")
-            print(name)
+            if name in self.data:
+                del self.data[name]
 
 
 # Testing the address book system
@@ -80,13 +78,9 @@ if __name__ == "__main__":
     print()
     for record in book.data.values():
         print(record)
-    print()
     print(jo_find)
-    jo_del = book.delete("Jo")
+    book.delete("Jo")
     book.delete("Jane")
-    print("----------")
-    print(jo_find)
-    print("----------")
 
     for record in book.data.values():
         print(record)
